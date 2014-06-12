@@ -5,14 +5,20 @@ package jp.ac.st.asojuku.original2014002;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+
 
 public class MainActivity extends Activity  implements View.OnClickListener{
 
-
+	SQLiteDatabase sdb = null;
+	MySQLiteOpenHelper helper = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +42,18 @@ public class MainActivity extends Activity  implements View.OnClickListener{
 
 		Button btntou = (Button)findViewById(R.id.btntou);
 		btntou.setOnClickListener(this);
-	}
 
+
+		if(sdb == null) {
+			helper = new MySQLiteOpenHelper(getApplicationContext());
+		}
+		try{
+			sdb = helper.getWritableDatabase();
+		}catch(SQLiteException e){
+			Log.e("ERROR", e.toString());
+			// 異常終了
+		}
+	}
 
 
 	@Override
@@ -54,29 +70,41 @@ public class MainActivity extends Activity  implements View.OnClickListener{
 		// TODO 自動生成されたメソッド・スタブ
 		switch(v.getId()){ //どのボタンが押されたか判定
 			case R.id.btnch: //btnMsgが押された
-				aaa = 0;
+				aaa = 2;
 
 				break;
 			case R.id.btn:
 				aaa = 1;
 				break;
+
+			case R.id.btntou:
+				EditText etv = (EditText)findViewById(R.id.edtMsg);
+				String inputMsg = etv.getText().toString();
+
+
+				if(inputMsg!=null && !inputMsg.isEmpty()){
+					helper.insertHitokoto(sdb, inputMsg);
+				}
+
+				etv.setText("");
+				break;
+
 		}
 		// 生成して代入用のIntentインスタンス変数を用意
 		Intent intent = null;
 		// ranの値によって処理をわける
 		switch(aaa){
-			case 0:
-				// 0なら大吉のページへ飛ばす
-				// インテントのインスタンス生成
+			case 2:
+				String strHitokoto = helper.selectRamdomHitokoto(sdb);
 				intent = new Intent(MainActivity.this, HitokotoActivity.class);
+
+				intent.putExtra("hitokoto", strHitokoto);
 				// 次画面のアクティビティ起動
 				startActivity(intent);
 				break;
 			case 1:
-				// 1なら中吉のページへ飛ばす
-				// インテントのインスタンス生成
 				intent = new Intent(MainActivity.this, MaintenanceActivity.class);
-				// 次画面のアクティビティ起動
+
 				startActivity(intent);
 				break;
 
